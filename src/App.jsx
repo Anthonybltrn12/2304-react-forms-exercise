@@ -6,14 +6,14 @@
 
 // STEP 1: First, let's import some useful tools that we'll need to accomplish this exercise. That means we'll need to import the useState and useEffect hooks from the React dependency. 
 // Write your code below: 
-
+import {useState, useEffect} from 'react'
 // Write your code above: 
 import './App.css'
 
 function App() {
   // STEP 2: Next, we'll want to create some state management to hold our data. Use the useState hook to create a new piece of state. Call the getter "allPosts", and the setter, "setAllPosts". You can also set the default value of this state to an empty array, since we know that we will eventually be fetching a dataset which will be an array of objects, where each object is an individual blog post. 
   // Write your code below:
-
+  const [allPosts, setAllPosts] = useState([]);
   // Write your code above: 
 
   // STEP 5: In order to accomplish the next goal of adding a React form, we'll need some more state management for each of that form's inputs. 
@@ -21,7 +21,8 @@ function App() {
   // STEP 5b: Use the useState hook to create another new pair of state variables. The getter should be called "newPostBody", and the setter "setNewPostBody". Set the default value of this state as a string. 
   
   // Write your code for step 5 below: 
-
+const [newPostTitle, setNewPostTitle] = useState('')
+const [newPostBody, setNewPostBody] = useState('')
   // Write your code for step 5 above: 
 
 
@@ -37,9 +38,45 @@ function App() {
     // All done! To summarize, this callback function, when run, will fetch some data from an API, translate it, and then save that data to our state. Now we'll be able to render that data on our site in step 4. 
 
   // Write your code for step 3 below: 
-
+  useEffect(() => {
+async function fetchBlogPosts(){
+  try{
+    let response = await fetch('https://dummyjson.com/posts')
+    let newData = await response.json();
+    // console.log(newData);
+    setAllPosts(newData.posts);
+  }catch(error){
+    console.error(error)
+  }
+}
+fetchBlogPosts();
+  }, [])
   // Write your code for step 3 above:
-  
+  async function sendNewPostReq(){
+    try{
+      const response = await fetch('https://dummyjson.com/posts/add', {
+        method : 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: newPostBody,
+          userId : 1
+        })
+      })
+      const translatedData = await response.json();
+      console.log(translatedData)
+
+       let newPostarr = {
+         name: translatedData.title
+       };
+
+       setAllPosts([... allPosts, newPostarr])
+    }catch(error){
+      console.error(error)
+    }
+    sendNewPostReq();
+  }
   // *******
   // STEP 7: Now we'll need to write a callback function for the form such that, when a user hits the submit button, *something* will occur. That something is a POST request sending the data for our new blog post to the API, whereby the API processes that request and sends us back some info about our new blog post. 
   // STEP 7A: Write an asynchronous function called sendNewPostReq. 
@@ -65,6 +102,18 @@ function App() {
         Write your code below:  
         */}
 
+{     
+          allPosts.length ? ( allPosts.map((singlePost, idx) => {
+            return (
+              <div key={idx}>
+                <p>Title: {singlePost.title}</p>
+                <p>Post: {singlePost.body}</p>
+              </div>
+            );
+          })
+        ) : (
+          <p>Loading . . .</p>
+        )}  
         {/* 
         STEP 6: Now we want to set up a React form that will allow us to add new blog posts to the list we created in step 4. 
         STEP 6a: First, create a form element.
@@ -73,7 +122,32 @@ function App() {
         STEP 6d: Now we'll have to add an event listener to each of those inputs so that, once the web user begins typing in that input, our state data for that input gets changed as well. We'll use an onChange event listener to accomplish this. Be sure to add a callback function to that event listener that uses the event parameter and the appropriate state setter function to set the event.target.value. 
         (Note: This is one of the most difficult steps of this exercise, so if the above was mumbo jumbo to you, refer to the demo code. Compare and contrast how I did it with how you might approach it here.)
         */}
+         <form>
+          <label htmlFor='Name'>Blog Post Title</label>
+          <input 
+          name = 'name'
+          type='text'
+          placeholder='Your Blog Post Title goes here'
+          value={newPostTitle}
+            onChange ={(event) => {
+            setNewPostTitle(event.target.value)
+          }}>
 
+          </input>
+
+          <label htmlFor='Body'>Blog Body Text</label>
+          <input 
+          name = 'Body'
+          type='text'
+          placeholder='Your Blog Body Text goes here'
+          value={newPostBody}
+             onChange ={(event) => {
+            setNewPostBody(event.target.value)
+          }}>
+            
+          </input>
+          <button type="submit">Create New Blog</button>
+         </form>
         {/* STEP 8: In the form that we created, we need to attach the callback function we wrote in step 7 to an onSubmit event listener in the form's opening tag. That way, once a user clicks the submit button, the onSubmit listener is triggered, which then triggers our sendNewPostReq callback function.
         If you've done everything correctly up to this step, you should now see your list of all posts being updated in live time when you create a new blog post yourself! 
         */}
